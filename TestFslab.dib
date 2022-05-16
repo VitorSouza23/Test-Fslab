@@ -1,0 +1,49 @@
+#!fsharp
+
+#r "nuget: Deedle"
+#r "nuget: FSharp.Stats"
+#r "nuget: Plotly.NET, 2.0.0-preview.16"
+#r "nuget: Plotly.NET.Interactive, 2.0.0-preview.12"
+#r "nuget: FSharp.Data"
+
+#!fsharp
+
+open FSharp.Stats
+
+let factorialOf3 = SpecialFunctions.Factorial.factorial 3
+
+printf "%A" factorialOf3
+
+#!fsharp
+
+open FSharp.Data
+open Deedle
+
+let rawData = Http.RequestString @"https://raw.githubusercontent.com/dotnet/machinelearning/master/test/data/housing.txt"
+let df = Frame.ReadCsvString(rawData, hasHeaders=true, separators="\t")
+df.Print()
+
+#!fsharp
+
+let housesNotAtRiver = 
+    df
+    |> Frame.sliceCols ["RoomsPerDwelling"; "MedianHomeValue"; "CharlesRiver"]
+    |> Frame.filterRowValues (fun s -> s.GetAs<bool>("CharlesRiver") |> not)
+
+housesNotAtRiver.Print()
+
+#!fsharp
+
+open Plotly.NET
+
+let pricesNotAtRiver : seq<float> =
+    housesNotAtRiver
+    |> Frame.getCol "MedianHomeValue"
+    |> Series.values
+
+let h1 = 
+    Chart.Histogram(pricesNotAtRiver)
+    |> Chart.withXAxisStyle("medium value of owner occupied homes in 1000s")
+    |> Chart.withXAxisStyle("price distibuition")   
+
+h1.Display() 
