@@ -47,3 +47,28 @@ let h1 =
     |> Chart.withXAxisStyle("price distibuition")   
 
 h1.Display() 
+
+#!fsharp
+
+let housesAtRiver = 
+    df
+    |> Frame.sliceCols ["RoomsPerDwelling"; "MedianHomeValue"; "CharlesRiver"]
+    |> Frame.filterRowValues (fun s -> s.GetAs<bool>("CharlesRiver"))
+
+let pricesAtRiver: seq<float> =
+    housesAtRiver
+    |> Frame.getCol "MedianHomeValue"
+    |> Series.values
+
+let h2 =
+    [
+        Chart.Histogram(pricesNotAtRiver)
+        |> Chart.withTraceName "not at river"
+        Chart.Histogram(pricesAtRiver)
+        |> Chart.withTraceName "at river"
+    ]
+    |> Chart.combine
+    |> Chart.withXAxisStyle("median value of owner occupied homes in 1000s")
+    |> Chart.withXAxisStyle("Comparison of price distributions")
+
+h2.Display()
